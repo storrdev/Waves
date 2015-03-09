@@ -1,41 +1,176 @@
-<!doctype html>
+<!DOCTYPE HTML>
 <html>
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <title>Waves by storrdev</title>
+<head>
+	<title>Waves</title>
+	<style type="text/css" media="screen" src="style.css">
+		* { margin:0; padding:0; }
+		html, body { width:100%; height:100%; }
+		canvas {
+			display:block;
+		}
+		#controls {
+			position: absolute;
+			bottom: 0;
+			right: 0;
+			height: 250px;
+			width: 300px;
+			background-color: white;
+			opacity: 0.8;
+			font-family: ariel, helvetica;
+			font-size: 14px;
+		}
+			#controls.inner {
+				position: relative;
+				width: 100%;
+				height: 100%;
+			}
+		
+		#circleRadiusLabel {
+			position: absolute;
+			top: 10px;
+			left: 10px;
+		}
+		
+		#circleRadius {
+			position: absolute;
+			top: 30px;
+			left: 10px;
+		}
+		
+		#orbitRadiusLabel {
+			position: absolute;
+			top: 45px;
+			left: 10px;
+		}
+		
+		#orbitRadius {
+			position: absolute;
+			top: 65px;
+			left: 10px;
+		}
+	</style>
+</head>
+<body>
 
-    <link rel="stylesheet" href="stylesheets/styles.css">
-    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-    <!--[if lt IE 9]>
-    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
-  </head>
-  <body>
-    <div class="wrapper">
-      <header>
-        <h1>Waves</h1>
-        <p>Interactive HTML5 Canvas rainbow wave animation</p>
+<canvas id="view">
+	Your browser does not support canvas elements. Please upgrade to a modern browser.
+</canvas>
 
-        <p class="view"><a href="https://github.com/storrdev/Waves">View the Project on GitHub <small>storrdev/Waves</small></a></p>
+<div id="controls">
+	<div class="inner">
+		<div id="circleRadiusLabel">Circle Radius</div>
+		<input type="range" id="circleRadius" min="5" max="50" value="10">
+		
+		<div id="orbitRadiusLabel">Orbit Radius</div>
+		<input type="range" id="orbitRadius" min="5" max="100" value="40">
+	</div><!--.inner-->
+</div><!--#controls-->
 
+<script>
 
-        <ul>
-          <li><a href="https://github.com/storrdev/Waves/zipball/master">Download <strong>ZIP File</strong></a></li>
-          <li><a href="https://github.com/storrdev/Waves/tarball/master">Download <strong>TAR Ball</strong></a></li>
-          <li><a href="https://github.com/storrdev/Waves">View On <strong>GitHub</strong></a></li>
-        </ul>
-      </header>
-      <section>
-        <p>Hey, it's my wave thingy</p>
-      </section>
-      <footer>
-        <p>This project is maintained by <a href="https://github.com/storrdev">storrdev</a></p>
-        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
-      </footer>
-    </div>
-    <script src="javascripts/scale.fix.js"></script>
-    
-  </body>
+var canvas = document.getElementById('view');
+var ctx = canvas.getContext('2d');
+
+(function() {
+  var requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame ||
+                              window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
+  window.requestAnimationFrame = requestAnimationFrame;
+})();
+
+start();
+draw();
+
+function start() {
+
+	canvas.width = window.innerWidth;
+	canvas.height = window.innerHeight;
+
+	var xSpacing = 30;
+	var ySpacing = 30;
+	//var r = 40;
+	var r = document.getElementById("orbitRadius").value;
+	var orbitStartRad = 0;
+	var rowCount = 0;
+	circles = new Array();
+	
+	for (var y = -ySpacing - (r * 2); y <= canvas.height + ySpacing + (r * 2); y += ySpacing) {
+		orbitStartRad = 0 + (rowCount * .02);
+		for (var x = -xSpacing; x <= canvas.width + xSpacing; x += xSpacing) {
+			if (orbitStartRad <= 2) {
+				orbitStartRad += .045;
+			}
+			else {
+				orbitStartRad = 0;
+			}
+			circles.push(new circle(x, y, r, orbitStartRad));
+		}
+		rowCount++;
+	}
+
+}
+
+function draw() {
+	requestAnimationFrame(draw);
+	ctx.clearRect(0, 0, canvas.width, canvas.height);
+	for (var i = 0; i < circles.length; i++) {
+		circles[i].draw();
+	}
+	
+}
+
+// circle object
+function circle(x, y, r, radianCounter) {
+
+	var orbitX = 0;
+	var orbitY = 0;
+	var orbitAngle = 0;
+	var circleRadius = document.getElementById("circleRadius").value;
+	
+	this.init = function() {
+		this.x = x;
+		this.y = y;
+		this.r = r;
+		this.radianCounter = radianCounter;
+	};
+	
+	this.draw = function() {
+		// Draw big circle
+		/*ctx.beginPath();
+    	ctx.arc(this.x, this.y, this.r, 0, Math.PI*2, true);
+    	ctx.stroke();*/
+    	
+    	// Update orbital circle position
+    	if (this.radianCounter <= 2) {
+    		this.radianCounter += .01;
+    	}
+    	else {
+    		this.radianCounter = 0;
+    	}
+    	
+    	this.r = document.getElementById("orbitRadius").value;
+    	orbitAngle = this.radianCounter * Math.PI;
+    	orbitX = this.x + this.r * Math.cos(orbitAngle);
+    	orbitY = this.y + this.r * Math.sin(orbitAngle);
+    	
+    	// Update orbital circle color
+    	red   = parseInt(Math.sin(.3 * (this.radianCounter * 10.5) + 0) * 127 + 128);
+   		green = parseInt(Math.sin(.3 * (this.radianCounter * 10.5) + 2) * 127 + 128);
+   		blue  = parseInt(Math.sin(.3 * (this.radianCounter * 10.5) + 4) * 127 + 128);
+    	
+    	// Draw orbital circle
+    	ctx.beginPath();
+    	circleRadius = document.getElementById("circleRadius").value;
+    	ctx.arc(orbitX, orbitY, circleRadius, Math.PI*2, false);
+    	ctx.fillStyle = "rgb(" + red + ", " + green + ", " + blue + ")";
+    	ctx.fill();
+    	
+	};
+	
+	this.init();
+	
+}
+
+</script>
+
+</body>
 </html>
