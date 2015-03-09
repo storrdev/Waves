@@ -3,4 +3,4 @@ Waves
 
 HTML5 Canvas rainbow wave animation
 
-Demo: http://storrdev.com/Waves/
+Demo: http://storrdev.github.io/Waves/
